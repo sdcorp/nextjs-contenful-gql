@@ -7,19 +7,21 @@ import { gql } from '@apollo/client';
 import { apolloClient } from '../../utils/apolloClient';
 import { PostPreview } from '../../components/PostPreview';
 import { CSSProperties } from 'react';
+import { InstantSearch, SearchBox, connectHits } from 'react-instantsearch-dom';
+import { getSearchClient } from '../../utils/algolia';
 
-const GET_POSTS = gql`
+export const GET_POSTS = gql`
   query GetPosts {
     blogPostCollection {
-      total
       items {
+        title
+        slug
+        description
+        publishDate
+        tags
         sys {
           id
         }
-        slug
-        title
-        description
-        publishDate
       }
     }
   }
@@ -32,22 +34,48 @@ type Props = {
 
 const postListStyle: CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: '1fr 1fr 1fr',
+  // gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
+  gridAutoColumns: '1fr',
+  gridAutoFlow: 'column',
+  justifyItems: 'center',
   gap: '1rem',
+  marginTop: '2rem',
 };
 
-const Posts: React.FC<Props> = ({ posts, total }) => {
+const searchBarStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'auto 75%',
+  columnGap: '1rem',
+  justifyContent: 'center',
+  alignItems: 'center',
+};
+
+const CustomHits = connectHits(({ hits }) => (
+  <div style={postListStyle}>
+    {hits.map((p) => (
+      <PostPreview key={p.objectID} data={p} />
+    ))}
+  </div>
+));
+
+const Posts: React.FC<Props> = ({ total }) => {
   const { pathname } = useRouter();
+  const searchClient = getSearchClient();
   return (
     <Layout title="Users List | Next.js + TypeScript Example">
       <h1>Posts List. Total: {total}</h1>
 
       <p>You are currently on: {pathname}</p>
-      <div style={postListStyle}>
-        {posts.map((p) => (
-          <PostPreview key={p.sys.id} data={p} />
-        ))}
+      <div>
+        <InstantSearch searchClient={searchClient} indexName="nxt_posts">
+          <div style={searchBarStyle}>
+            <img src="/search-by-algolia-light-background.svg" alt="Algolia Light" />
+            <SearchBox showLoadingIndicator />
+          </div>
+          <CustomHits />
+        </InstantSearch>
       </div>
+
       <p>
         <Link href="/">
           <a>Go home</a>

@@ -60,7 +60,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
   // Get the paths we want to pre-render based on users
   const slugResponse = await apolloClient.query({ query: GET_SLUGS });
   const slugs = slugResponse.data.blogPostCollection.items;
-  const paths = slugs.map(({ slug }: any) => ({ params: { slug } }));
+  const paths = slugs.map(({ slug, sys: { id } }: any) => ({ params: { slug, fields: { id } } }));
   // We'll pre-render only these paths at build time.
   // { fallback: false } means other routes should 404.
   // console.log({ path: paths[0] });
@@ -77,7 +77,6 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     const slugs = slugResponse.data.blogPostCollection.items;
     const postId = slugs.find(({ slug }: any) => slug === slugParam)?.sys?.id;
     const { data: post } = await apolloClient.query({ query: GET_POST, variables: { id: String(postId) } });
-    console.log('call');
     // By returning { props: item }, the StaticPropsDetail component
     // will receive `item` as a prop at build time
     return { props: { item: post?.blogPost ?? null } };
