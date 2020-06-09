@@ -13,6 +13,7 @@ import { getSearchClient } from '../../utils/algolia';
 export const GET_POSTS = gql`
   query GetPosts {
     blogPostCollection {
+      total
       items {
         title
         slug
@@ -90,6 +91,7 @@ export const getStaticProps: GetStaticProps = async () => {
   // Don't forget to include the respective types for any props passed into
   // the component.
   const postsCollection = await apolloClient.query({ query: GET_POSTS });
+
   const props = {
     posts: postsCollection?.data?.blogPostCollection?.items ?? null,
     total: postsCollection?.data?.blogPostCollection?.total ?? 0,
